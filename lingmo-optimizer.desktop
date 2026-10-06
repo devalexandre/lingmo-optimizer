@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Optimizer
+Name[pt_BR]=Otimizador
+Comment=Clean caches and free up disk space
+Comment[pt_BR]=Limpe caches e libere espaço em disco
+Exec=lingmo-optimizer
+Icon=stacer
+Terminal=false
+Categories=System;
+Keywords=clean;cache;optimize;disk;
+Keywords[pt_BR]=limpar;cache;otimizar;disco;
+StartupNotify=true
