@@ -1,0 +1,92 @@
+#!/bin/sh
+#
+# The only part of Lingmo Optimizer that runs as root, through
+#   pkexec /usr/lib/lingmo-optimizer/clean-system <step>...
+# (polkit action com.lingmo.optimizer.clean-system). It takes no paths and no
+# free-form arguments: each step is one fixed, well-known cleanup.
+#
+#   pacman-cache   paccache -rk1 + paccache -ruk0 (pacman-contrib), or pacman -Sc
+#   journal        journalctl --vacuum-time=7d
+#   flatpak        flatpak uninstall --system --unused
+#
+# For each step it prints "@@STEP <step>" before and "@@FREED <step> <bytes>"
+# after, then "@@DONE". Unknown steps print "@@ERROR usage" and exit 2.
+#
+# Testing without root: when not running as root and LINGMO_OPTIMIZER_FAKE is
+# set, nothing is run and every step reports a fake amount. As root that
+# variable is ignored.
+
+export LC_ALL=C
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+
+FAKE=
+if [ "$(id -u)" != 0 ]; then
+    if [ -n "$LINGMO_OPTIMIZER_FAKE" ]; then
+        FAKE=1
+    else
+        echo "@@ERROR root"
+        exit 2
+    fi
+fi
+
+[ $# -gt 0 ] || { echo "@@ERROR usage"; exit 2; }
+for step in "$@"; do
+    case "$step" in
+        pacman-cache|journal|flatpak) ;;
+        *) echo "@@ERROR usage"; exit 2 ;;
+    esac
+done
+
+# Real disk usage in bytes (0 when missing)
+usage() {
+    [ -e "$1" ] || { echo 0; return; }
+    du -sx -B1 "$1" 2>/dev/null | cut -f1
+}
+
+run_step() {
+    case "$1" in
+        pacman-cache)
+            dir=/var/cache/pacman/pkg
+            before=$(usage "$dir")
+            if command -v paccache >/dev/null 2>&1; then
+                paccache -rk1 --nocolor
+                paccache -ruk0 --nocolor
+            else
+                pacman -Sc --noconfirm
+            fi
+            ;;
+        journal)
+            dir=/var/log/journal
+            before=$(usage "$dir")
+            journalctl --vacuum-time=7d
+            ;;
+        flatpak)
+            dir=/var/lib/flatpak
+            before=$(usage "$dir")
+            if command -v flatpak >/dev/null 2>&1; then
+                flatpak uninstall --system --unused -y --noninteractive
+            fi
+            ;;
+    esac
+    status=$?
+    after=$(usage "$dir")
+    freed=$((before - after))
+    [ "$freed" -lt 0 ] && freed=0
+    echo "@@FREED $1 $freed $status"
+}
+
+for step in "$@"; do
+    echo "@@STEP $step"
+    if [ -n "$FAKE" ]; then
+        sleep 0.3
+        case "$step" in
+            pacman-cache) echo "@@FREED $step 1288490188 0" ;;
+            journal) echo "@@FREED $step 402653184 0" ;;
+            flatpak) echo "@@FREED $step 0 0" ;;
+        esac
+        continue
+    fi
+    run_step "$step"
+done
+echo "@@DONE"

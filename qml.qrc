@@ -1,7 +1,23 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/Main.qml</file>
+        <file>qml/OverviewPage.qml</file>
+        <file>qml/Donut.qml</file>
+        <file>qml/CleanupDialog.qml</file>
+        <file>qml/CpuPage.qml</file>
+        <file>qml/MemoryPage.qml</file>
+        <file>qml/AppList.qml</file>
+        <file>qml/StoragePage.qml</file>
+        <file>qml/AnalyzerView.qml</file>
+        <file>qml/SuggestionsView.qml</file>
+        <file>qml/PageHeader.qml</file>
+        <file>qml/SegmentedControl.qml</file>
+        <file>qml/UsageBar.qml</file>
+        <file>qml/ConfirmDialog.qml</file>
+        <file>qml/MessageDialog.qml</file>
         <file>qml/ActionButton.qml</file>
+        <file>qml/IconButton.qml</file>
         <file>qml/Card.qml</file>
+        <file>qml/Spinner.qml</file>
     </qresource>
 </RCC>
