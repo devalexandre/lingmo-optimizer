@@ -23,7 +23,9 @@ Item {
         anchors.bottomMargin: LingmoUI.Units.largeSpacing
         spacing: LingmoUI.Units.largeSpacing
 
-        PageHeader {
+        LingmoUI.PageHeader {
+            backVisible: true
+            backTipText: qsTr("Voltar")
             title: qsTr("Memória")
             Layout.fillWidth: true
             Layout.rightMargin: LingmoUI.Units.largeSpacing
@@ -41,7 +43,7 @@ Item {
                 width: apps.width - LingmoUI.Units.largeSpacing
                 spacing: LingmoUI.Units.largeSpacing
 
-                Card {
+                LingmoUI.Card {
                     Layout.fillWidth: true
                     implicitHeight: breakdown.implicitHeight + LingmoUI.Units.largeSpacing * 2
 
@@ -57,14 +59,14 @@ Item {
                             Layout.fillWidth: true
                             Label {
                                 text: qsTr("%1 em uso de %2").arg(files.formatBytes(systemInfo.memUsed)).arg(files.formatBytes(systemInfo.memTotal))
-                                font.pointSize: LingmoUI.Theme.fontSize * 1.3
+                                font.pointSize: LingmoUI.Units.fontSubheading
                                 font.bold: true
                                 color: LingmoUI.Theme.textColor
                                 Layout.fillWidth: true
                             }
                             Label {
                                 text: files.formatPercent(systemInfo.ramUsage)
-                                color: LingmoUI.Theme.disabledTextColor
+                                color: LingmoUI.Theme.secondaryTextColor
                             }
                         }
 
@@ -84,14 +86,14 @@ Item {
                                     height: parent.height
                                     width: stacked.width * systemInfo.memUsed / stacked.total
                                     color: LingmoUI.Theme.blueColor
-                                    Behavior on width { NumberAnimation { duration: 250 } }
+                                    Behavior on width { NumberAnimation { duration: LingmoUI.Units.longDuration; easing.type: LingmoUI.Units.easing } }
                                 }
                                 Rectangle {
                                     height: parent.height
                                     width: stacked.width * Math.min(systemInfo.memCache, systemInfo.memAvailable) / stacked.total
                                     color: LingmoUI.Theme.purpleColor
                                     opacity: 0.55
-                                    Behavior on width { NumberAnimation { duration: 250 } }
+                                    Behavior on width { NumberAnimation { duration: LingmoUI.Units.longDuration; easing.type: LingmoUI.Units.easing } }
                                 }
                             }
                         }
@@ -126,7 +128,7 @@ Item {
                                         radius: 3
                                         color: modelData.color
                                         border.width: 1
-                                        border.color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g, LingmoUI.Theme.textColor.b, 0.12)
+                                        border.color: LingmoUI.Theme.borderColor
                                         Layout.alignment: Qt.AlignTop
                                         Layout.topMargin: 4
                                     }
@@ -139,8 +141,8 @@ Item {
                                         }
                                         Label {
                                             text: modelData.hint
-                                            color: LingmoUI.Theme.disabledTextColor
-                                            font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                                            color: LingmoUI.Theme.secondaryTextColor
+                                            font.pointSize: LingmoUI.Units.fontCaption
                                             wrapMode: Text.WordWrap
                                             Layout.fillWidth: true
                                         }
@@ -153,7 +155,7 @@ Item {
                             Layout.fillWidth: true
                             Layout.topMargin: LingmoUI.Units.smallSpacing
                             implicitHeight: 1
-                            color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g, LingmoUI.Theme.textColor.b, 0.08)
+                            color: LingmoUI.Theme.dividerColor
                         }
 
                         RowLayout {
@@ -175,7 +177,7 @@ Item {
                                 text: systemInfo.swapTotal > 0
                                       ? qsTr("%1 de %2").arg(files.formatBytes(systemInfo.swapUsed)).arg(files.formatBytes(systemInfo.swapTotal))
                                       : qsTr("Sem swap configurado")
-                                color: LingmoUI.Theme.disabledTextColor
+                                color: LingmoUI.Theme.secondaryTextColor
                                 Layout.fillWidth: systemInfo.swapTotal <= 0
                             }
                         }
@@ -195,7 +197,7 @@ Item {
                                       .arg(files.formatBytes(systemInfo.zramOriginal))
                                       .arg(files.formatBytes(systemInfo.zramMemUsed))
                                       .arg(systemInfo.zramMemUsed > 0 ? (systemInfo.zramOriginal / systemInfo.zramMemUsed).toFixed(1).replace(".", ",") : "0")
-                                color: LingmoUI.Theme.disabledTextColor
+                                color: LingmoUI.Theme.secondaryTextColor
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -211,8 +213,8 @@ Item {
                 }
                 Label {
                     text: qsTr("Memória proporcional (PSS): a parte compartilhada entre processos é dividida entre eles.")
-                    color: LingmoUI.Theme.disabledTextColor
-                    font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                    color: LingmoUI.Theme.secondaryTextColor
+                    font.pointSize: LingmoUI.Units.fontCaption
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     Layout.bottomMargin: LingmoUI.Units.smallSpacing
@@ -222,12 +224,11 @@ Item {
             footer: Item {
                 width: apps.width
                 height: processes.ready || apps.count > 0 ? LingmoUI.Units.largeSpacing : 80
-                Spinner {
+                LingmoUI.Spinner {
                     anchors.centerIn: parent
                     visible: apps.count === 0
                     running: visible
-                    width: LingmoUI.Units.iconSizes.medium
-                    height: width
+                    size: LingmoUI.Units.iconSizes.medium
                 }
             }
         }

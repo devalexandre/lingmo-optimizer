@@ -56,9 +56,10 @@ ColumnLayout {
 
         Item { Layout.fillWidth: true }
 
-        ActionButton {
+        LingmoUI.ActionButton {
             text: storage.scanning ? qsTr("Parar") : qsTr("Reanalisar")
             destructive: storage.scanning
+            subtle: true
             onClicked: storage.scanning ? storage.cancel() : storage.rescan()
         }
     }
@@ -80,7 +81,7 @@ ColumnLayout {
                 Label {
                     visible: index > 0
                     text: "›"
-                    color: LingmoUI.Theme.disabledTextColor
+                    color: LingmoUI.Theme.secondaryTextColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -90,9 +91,9 @@ ColumnLayout {
                     height: crumbLabel.implicitHeight + 6
                     radius: LingmoUI.Theme.smallRadius
                     color: crumbMouse.containsMouse && !last
-                           ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g, LingmoUI.Theme.textColor.b, 0.08)
+                           ? LingmoUI.Theme.hoverColor
                            : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on color { ColorAnimation { duration: LingmoUI.Units.veryShortDuration } }
 
                     Label {
                         id: crumbLabel
@@ -120,17 +121,16 @@ ColumnLayout {
         Layout.rightMargin: LingmoUI.Units.largeSpacing
         spacing: LingmoUI.Units.smallSpacing
 
-        Spinner {
+        LingmoUI.Spinner {
             visible: storage.scanning
             running: visible
-            Layout.preferredWidth: LingmoUI.Units.iconSizes.small
-            Layout.preferredHeight: LingmoUI.Units.iconSizes.small
+            size: LingmoUI.Units.iconSizes.small
         }
         Label {
             Layout.fillWidth: true
             elide: Text.ElideMiddle
-            color: LingmoUI.Theme.disabledTextColor
-            font.pointSize: LingmoUI.Theme.fontSize * 0.9
+            color: LingmoUI.Theme.secondaryTextColor
+            font.pointSize: LingmoUI.Units.fontCaption
             text: storage.scanning
                   ? qsTr("Analisando... %1 em %2 itens · %3").arg(files.formatBytes(storage.scannedBytes))
                         .arg(Number(storage.scannedEntries).toLocaleString(Qt.locale("pt_BR"), "f", 0)).arg(storage.scanningPath)
@@ -159,7 +159,7 @@ ColumnLayout {
             height: storage.pendingName.length > 0 ? pendingCard.height + list.spacing : 0
             visible: height > 0
 
-            Card {
+            LingmoUI.Card {
                 id: pendingCard
                 width: parent.width - LingmoUI.Units.largeSpacing
                 height: pendingRow.implicitHeight + LingmoUI.Units.largeSpacing
@@ -171,10 +171,7 @@ ColumnLayout {
                     anchors.rightMargin: LingmoUI.Units.largeSpacing
                     spacing: LingmoUI.Units.largeSpacing
 
-                    Spinner {
-                        Layout.preferredWidth: LingmoUI.Units.iconSizes.smallMedium
-                        Layout.preferredHeight: LingmoUI.Units.iconSizes.smallMedium
-                    }
+                    LingmoUI.Spinner {}
                     Label {
                         text: storage.pendingName
                         color: LingmoUI.Theme.textColor
@@ -183,8 +180,8 @@ ColumnLayout {
                     }
                     Label {
                         text: qsTr("analisando...")
-                        color: LingmoUI.Theme.disabledTextColor
-                        font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                        color: LingmoUI.Theme.secondaryTextColor
+                        font.pointSize: LingmoUI.Units.fontCaption
                     }
                     Label {
                         text: files.formatBytes(storage.pendingSize)
@@ -193,13 +190,13 @@ ColumnLayout {
                         Layout.preferredWidth: 72
                     }
                     Item {
-                        Layout.preferredWidth: 44 + LingmoUI.Units.iconSizes.medium * 2 + LingmoUI.Units.largeSpacing * 2
+                        Layout.preferredWidth: 44 + LingmoUI.Units.smallControlHeight * 2 + LingmoUI.Units.largeSpacing * 2
                     }
                 }
             }
         }
 
-        delegate: Card {
+        delegate: LingmoUI.Card {
             id: row
 
             required property int index
@@ -259,8 +256,8 @@ ColumnLayout {
                                 : row.kind === "mount" ? qsTr("outro sistema de arquivos")
                                 : row.kind === "skipped" ? qsTr("arquivos virtuais do sistema")
                                 : row.incomplete ? qsTr("parcial") : ""
-                            color: row.denied ? LingmoUI.Theme.orangeColor : LingmoUI.Theme.disabledTextColor
-                            font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                            color: row.denied ? LingmoUI.Theme.orangeColor : LingmoUI.Theme.secondaryTextColor
+                            font.pointSize: LingmoUI.Units.fontCaption
                         }
                     }
                     UsageBar {
@@ -279,19 +276,19 @@ ColumnLayout {
                 }
                 Label {
                     text: row.kind === "mount" || row.kind === "skipped" ? "" : files.formatPercent(row.fraction)
-                    color: LingmoUI.Theme.disabledTextColor
-                    font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                    color: LingmoUI.Theme.secondaryTextColor
+                    font.pointSize: LingmoUI.Units.fontCaption
                     horizontalAlignment: Text.AlignRight
                     Layout.preferredWidth: 44
                 }
 
-                IconButton {
+                LingmoUI.IconButton {
                     iconName: "document-open-folder"
                     tipText: qsTr("Abrir no gerenciador de arquivos")
                     enabled: row.kind !== "skipped"
                     onClicked: files.openInFileManager(row.path)
                 }
-                IconButton {
+                LingmoUI.IconButton {
                     iconName: "edit-delete"
                     tipText: qsTr("Mover para a lixeira")
                     visible: row.canTrash
@@ -299,17 +296,18 @@ ColumnLayout {
                 }
                 Item {
                     visible: !row.canTrash
-                    implicitWidth: LingmoUI.Units.iconSizes.medium
-                    implicitHeight: LingmoUI.Units.iconSizes.medium
+                    implicitWidth: LingmoUI.Units.smallControlHeight
+                    implicitHeight: LingmoUI.Units.smallControlHeight
                 }
             }
         }
 
-        Label {
+        LingmoUI.EmptyState {
             anchors.centerIn: parent
+            width: Math.min(implicitWidth, list.width - LingmoUI.Units.largeSpacing * 2)
             visible: list.count === 0 && !storage.scanning && storage.hasResult
-            text: storage.currentDenied ? qsTr("Sem permissão para ler esta pasta") : qsTr("Pasta vazia")
-            color: LingmoUI.Theme.disabledTextColor
+            iconName: storage.currentDenied ? "folder-locked" : "folder-open"
+            title: storage.currentDenied ? qsTr("Sem permissão para ler esta pasta") : qsTr("Pasta vazia")
         }
     }
 }

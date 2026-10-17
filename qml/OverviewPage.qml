@@ -17,7 +17,7 @@ Item {
 
         Label {
             text: qsTr("Visão Geral do Sistema")
-            font.pointSize: LingmoUI.Theme.fontSize * 1.8
+            font.pointSize: LingmoUI.Units.fontTitle
             font.bold: true
             color: LingmoUI.Theme.textColor
             Layout.alignment: Qt.AlignHCenter
@@ -25,7 +25,7 @@ Item {
 
         Label {
             text: qsTr("Clique em um item para ver os detalhes, ou libere espaço e memória com um clique.")
-            color: LingmoUI.Theme.disabledTextColor
+            color: LingmoUI.Theme.secondaryTextColor
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             Layout.fillWidth: true
@@ -64,7 +64,7 @@ Item {
             Item { Layout.fillWidth: true }
         }
 
-        ActionButton {
+        LingmoUI.ActionButton {
             id: cleanBtn
             objectName: "cleanButton"
             Layout.alignment: Qt.AlignHCenter
@@ -72,6 +72,7 @@ Item {
             primary: true
             text: cleaner.running ? qsTr("Otimizando...") : qsTr("Otimizar e Limpar")
             enabled: !cleaner.running
+            busy: cleaner.running
             font.bold: true
             onClicked: cleanupDialog.openDialog()
         }

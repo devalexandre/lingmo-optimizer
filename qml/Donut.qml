@@ -4,7 +4,7 @@ import LingmoUI.CompatibleModule 3.0 as LingmoUI
 
 // One usage ring (CPU, memory or storage). The whole card is a button that
 // opens the matching detail page.
-Card {
+LingmoUI.Card {
     id: donut
 
     property string title: ""
@@ -12,11 +12,9 @@ Card {
     property real value: 0.0
     property color tintColor: LingmoUI.Theme.highlightColor
 
-    signal clicked()
-
     implicitWidth: Math.max(ring.width, subtitleLabel.implicitWidth) + LingmoUI.Units.largeSpacing * 3
     implicitHeight: ring.height + titleLabel.implicitHeight + subtitleLabel.implicitHeight + LingmoUI.Units.largeSpacing * 4.5
-    hoverEnabled: true
+    clickable: true
 
     onValueChanged: canvas.requestPaint()
     onTintColorChanged: canvas.requestPaint()
@@ -64,7 +62,7 @@ Card {
 
         Label {
             text: Math.round(donut.value * 100) + "%"
-            font.pointSize: LingmoUI.Theme.fontSize * 2
+            font.pointSize: LingmoUI.Units.fontTitle
             font.bold: true
             color: LingmoUI.Theme.textColor
             anchors.centerIn: parent
@@ -75,6 +73,7 @@ Card {
         id: titleLabel
         text: donut.title
         color: LingmoUI.Theme.textColor
+        font.pointSize: LingmoUI.Units.fontBody
         font.bold: true
         anchors.top: ring.bottom
         anchors.topMargin: LingmoUI.Units.largeSpacing
@@ -84,8 +83,8 @@ Card {
     Label {
         id: subtitleLabel
         text: donut.subtitle
-        color: LingmoUI.Theme.disabledTextColor
-        font.pointSize: LingmoUI.Theme.fontSize * 0.9
+        color: LingmoUI.Theme.secondaryTextColor
+        font.pointSize: LingmoUI.Units.fontCaption
         anchors.top: titleLabel.bottom
         anchors.topMargin: 2
         anchors.horizontalCenter: parent.horizontalCenter
@@ -100,15 +99,8 @@ Card {
         anchors.margins: LingmoUI.Units.largeSpacing
         source: "go-next"
         opacity: donut.hovered ? 0.9 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 120 } }
+        Behavior on opacity { NumberAnimation { duration: LingmoUI.Units.veryShortDuration } }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: donut.clicked()
-    }
-
-    Accessible.role: Accessible.Button
     Accessible.name: donut.title
 }

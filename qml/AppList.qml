@@ -35,7 +35,7 @@ ListView {
         return metric === "memory" ? (systemInfo.memTotal > 0 ? memory / systemInfo.memTotal : 0) : cpu
     }
 
-    delegate: Card {
+    delegate: LingmoUI.Card {
         id: row
 
         required property int index
@@ -93,8 +93,8 @@ ListView {
                     }
                     Label {
                         text: row.processCount === 1 ? qsTr("1 processo") : qsTr("%1 processos").arg(row.processCount)
-                        color: LingmoUI.Theme.disabledTextColor
-                        font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                        color: LingmoUI.Theme.secondaryTextColor
+                        font.pointSize: LingmoUI.Units.fontCaption
                     }
                 }
 
@@ -115,11 +115,12 @@ ListView {
                     Layout.preferredWidth: 90
                     implicitHeight: endButton.implicitHeight
 
-                    ActionButton {
+                    LingmoUI.ActionButton {
                         id: endButton
                         anchors.right: parent.right
                         visible: row.killable
                         destructive: true
+                        subtle: true
                         text: qsTr("Encerrar")
                         onClicked: {
                             confirmEnd.title = qsTr("Encerrar %1?").arg(row.name)
@@ -144,28 +145,28 @@ ListView {
 
                     Label {
                         text: modelData.pid
-                        color: LingmoUI.Theme.disabledTextColor
-                        font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                        color: LingmoUI.Theme.secondaryTextColor
+                        font.pointSize: LingmoUI.Units.fontCaption
                         Layout.preferredWidth: 60
                     }
                     Label {
                         text: modelData.command
                         color: LingmoUI.Theme.textColor
-                        font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                        font.pointSize: LingmoUI.Units.fontCaption
                         elide: Text.ElideMiddle
                         Layout.fillWidth: true
                     }
                     Label {
                         text: list.valueText(modelData.memory, modelData.cpu)
-                        color: LingmoUI.Theme.disabledTextColor
-                        font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                        color: LingmoUI.Theme.secondaryTextColor
+                        font.pointSize: LingmoUI.Units.fontCaption
                         horizontalAlignment: Text.AlignRight
                         Layout.preferredWidth: 70
                     }
                     Item {
                         Layout.preferredWidth: 90
-                        implicitHeight: LingmoUI.Units.iconSizes.medium
-                        IconButton {
+                        implicitHeight: LingmoUI.Units.smallControlHeight
+                        LingmoUI.IconButton {
                             anchors.right: parent.right
                             visible: modelData.killable
                             iconName: "process-stop"

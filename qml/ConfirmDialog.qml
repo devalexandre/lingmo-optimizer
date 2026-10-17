@@ -43,8 +43,8 @@ Dialog {
                 anchors.fill: parent
                 anchors.margins: LingmoUI.Units.smallSpacing
                 text: dialog.details
-                color: LingmoUI.Theme.disabledTextColor
-                font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                color: LingmoUI.Theme.secondaryTextColor
+                font.pointSize: LingmoUI.Units.fontCaption
                 wrapMode: Text.WrapAnywhere
             }
         }
@@ -55,12 +55,12 @@ Dialog {
 
             Item { Layout.fillWidth: true }
 
-            ActionButton {
+            LingmoUI.ActionButton {
                 text: qsTr("Cancelar")
                 onClicked: dialog.reject()
             }
 
-            ActionButton {
+            LingmoUI.ActionButton {
                 text: dialog.confirmText
                 destructive: dialog.destructive
                 primary: !dialog.destructive

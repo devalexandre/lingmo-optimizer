@@ -30,7 +30,7 @@ Dialog {
             Layout.fillWidth: true
         }
 
-        ActionButton {
+        LingmoUI.ActionButton {
             text: qsTr("OK")
             primary: true
             Layout.alignment: Qt.AlignRight

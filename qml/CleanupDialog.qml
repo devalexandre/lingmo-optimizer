@@ -66,7 +66,7 @@ Dialog {
         Label {
             visible: dialog.stage === "choose"
             text: qsTr("Escolha o que limpar. Nada da sua pasta pessoal além de caches é apagado.")
-            color: LingmoUI.Theme.disabledTextColor
+            color: LingmoUI.Theme.secondaryTextColor
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
@@ -74,7 +74,7 @@ Dialog {
         Repeater {
             model: dialog.stage === "choose" ? cleaner.steps : []
 
-            delegate: Card {
+            delegate: LingmoUI.Card {
                 id: stepCard
                 required property var modelData
                 Layout.fillWidth: true
@@ -109,8 +109,8 @@ Dialog {
                         }
                         Label {
                             text: stepCard.modelData.description
-                            color: LingmoUI.Theme.disabledTextColor
-                            font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                            color: LingmoUI.Theme.secondaryTextColor
+                            font.pointSize: LingmoUI.Units.fontCaption
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                         }
@@ -129,8 +129,8 @@ Dialog {
         Label {
             visible: dialog.stage === "choose" && dialog.needsRoot()
             text: qsTr("A senha de administrador será pedida uma vez para limpar os itens do sistema.")
-            color: LingmoUI.Theme.disabledTextColor
-            font.pointSize: LingmoUI.Theme.fontSize * 0.9
+            color: LingmoUI.Theme.secondaryTextColor
+            font.pointSize: LingmoUI.Units.fontCaption
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
@@ -141,10 +141,9 @@ Dialog {
             spacing: LingmoUI.Units.largeSpacing
             Layout.fillWidth: true
 
-            Spinner {
+            LingmoUI.Spinner {
                 running: dialog.stage === "running"
-                Layout.preferredWidth: LingmoUI.Units.iconSizes.medium
-                Layout.preferredHeight: LingmoUI.Units.iconSizes.medium
+                size: LingmoUI.Units.iconSizes.medium
             }
             Label {
                 text: cleaner.currentStep.length > 0 ? qsTr("Limpando: %1").arg(cleaner.currentStep) : qsTr("Limpando...")
@@ -157,7 +156,7 @@ Dialog {
         Label {
             visible: dialog.stage === "done"
             text: qsTr("Espaço liberado: %1").arg(files.formatBytes(dialog.totalFreed))
-            font.pointSize: LingmoUI.Theme.fontSize * 1.4
+            font.pointSize: LingmoUI.Units.fontHeading
             font.bold: true
             color: LingmoUI.Theme.textColor
         }
@@ -188,15 +187,15 @@ Dialog {
                     Label {
                         visible: modelData.message.length > 0
                         text: modelData.message
-                        color: modelData.ok ? LingmoUI.Theme.disabledTextColor : LingmoUI.Theme.redColor
-                        font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                        color: modelData.ok ? LingmoUI.Theme.secondaryTextColor : LingmoUI.Theme.redColor
+                        font.pointSize: LingmoUI.Units.fontCaption
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }
                 }
                 Label {
                     text: modelData.ok ? files.formatBytes(modelData.freed) : qsTr("não executado")
-                    color: modelData.ok ? LingmoUI.Theme.textColor : LingmoUI.Theme.disabledTextColor
+                    color: modelData.ok ? LingmoUI.Theme.textColor : LingmoUI.Theme.secondaryTextColor
                 }
             }
         }
@@ -207,12 +206,12 @@ Dialog {
 
             Item { Layout.fillWidth: true }
 
-            ActionButton {
+            LingmoUI.ActionButton {
                 visible: dialog.stage === "choose"
                 text: qsTr("Cancelar")
                 onClicked: dialog.close()
             }
-            ActionButton {
+            LingmoUI.ActionButton {
                 visible: dialog.stage === "choose"
                 objectName: "startCleanupButton"
                 text: qsTr("Limpar")
@@ -223,7 +222,7 @@ Dialog {
                     cleaner.run(dialog.chosenIds())
                 }
             }
-            ActionButton {
+            LingmoUI.ActionButton {
                 visible: dialog.stage === "done"
                 text: qsTr("Fechar")
                 primary: true

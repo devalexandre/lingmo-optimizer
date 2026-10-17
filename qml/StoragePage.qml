@@ -27,13 +27,15 @@ Item {
         anchors.bottomMargin: LingmoUI.Units.largeSpacing
         spacing: LingmoUI.Units.largeSpacing
 
-        PageHeader {
+        LingmoUI.PageHeader {
+            backVisible: true
+            backTipText: qsTr("Voltar")
             title: qsTr("Armazenamento")
             Layout.fillWidth: true
             Layout.rightMargin: LingmoUI.Units.largeSpacing
             onBack: page.back()
 
-            SegmentedControl {
+            LingmoUI.SegmentedControl {
                 id: tabs
                 objectName: "storageTabs"
                 model: [qsTr("Discos"), qsTr("Onde está o espaço"), qsTr("Sugestões")]
@@ -56,7 +58,7 @@ Item {
 
                 LingmoUI.WheelHandler { target: mountList }
 
-                delegate: Card {
+                delegate: LingmoUI.Card {
                     required property var modelData
                     width: mountList.width - LingmoUI.Units.largeSpacing
                     implicitHeight: mountRow.implicitHeight + LingmoUI.Units.largeSpacing * 2
@@ -90,7 +92,7 @@ Item {
                                 Label {
                                     text: modelData.device + " · " + modelData.fsType + (modelData.readOnly ? " · " + qsTr("somente leitura") : "")
                                           + (modelData.alsoMounted.length > 0 ? " · " + qsTr("também em %1").arg(modelData.alsoMounted.join(", ")) : "")
-                                    color: LingmoUI.Theme.disabledTextColor
+                                    color: LingmoUI.Theme.secondaryTextColor
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
@@ -104,12 +106,12 @@ Item {
                                 text: qsTr("%1 usados de %2 · %3 livres · %4")
                                       .arg(files.formatBytes(modelData.used)).arg(files.formatBytes(modelData.total))
                                       .arg(files.formatBytes(modelData.free)).arg(files.formatPercent(modelData.fraction))
-                                color: LingmoUI.Theme.disabledTextColor
-                                font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                                color: LingmoUI.Theme.secondaryTextColor
+                                font.pointSize: LingmoUI.Units.fontCaption
                             }
                         }
 
-                        ActionButton {
+                        LingmoUI.ActionButton {
                             text: qsTr("Analisar")
                             onClicked: {
                                 storage.analyze(modelData.mountPoint)

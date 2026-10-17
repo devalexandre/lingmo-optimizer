@@ -29,7 +29,9 @@ Item {
         anchors.bottomMargin: LingmoUI.Units.largeSpacing
         spacing: LingmoUI.Units.largeSpacing
 
-        PageHeader {
+        LingmoUI.PageHeader {
+            backVisible: true
+            backTipText: qsTr("Voltar")
             title: qsTr("CPU")
             Layout.fillWidth: true
             Layout.rightMargin: LingmoUI.Units.largeSpacing
@@ -47,7 +49,7 @@ Item {
                 width: apps.width - LingmoUI.Units.largeSpacing
                 spacing: LingmoUI.Units.largeSpacing
 
-                Card {
+                LingmoUI.Card {
                     Layout.fillWidth: true
                     implicitHeight: info.implicitHeight + LingmoUI.Units.largeSpacing * 2
 
@@ -63,7 +65,7 @@ Item {
                             Layout.fillWidth: true
                             Label {
                                 text: systemInfo.cpuModel
-                                font.pointSize: LingmoUI.Theme.fontSize * 1.3
+                                font.pointSize: LingmoUI.Units.fontSubheading
                                 font.bold: true
                                 color: LingmoUI.Theme.textColor
                                 elide: Text.ElideRight
@@ -71,7 +73,7 @@ Item {
                             }
                             Label {
                                 text: files.formatPercent(systemInfo.cpuUsage)
-                                font.pointSize: LingmoUI.Theme.fontSize * 1.3
+                                font.pointSize: LingmoUI.Units.fontSubheading
                                 font.bold: true
                                 color: LingmoUI.Theme.greenColor
                             }
@@ -100,8 +102,8 @@ Item {
                                     Layout.fillWidth: true
                                     Label {
                                         text: modelData.name
-                                        color: LingmoUI.Theme.disabledTextColor
-                                        font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                                        color: LingmoUI.Theme.secondaryTextColor
+                                        font.pointSize: LingmoUI.Units.fontCaption
                                     }
                                     Label {
                                         text: modelData.value
@@ -113,7 +115,7 @@ Item {
                     }
                 }
 
-                Card {
+                LingmoUI.Card {
                     Layout.fillWidth: true
                     implicitHeight: cores.implicitHeight + LingmoUI.Units.largeSpacing * 2
 
@@ -138,8 +140,8 @@ Item {
 
                                 Label {
                                     text: qsTr("CPU %1").arg(index + 1)
-                                    color: LingmoUI.Theme.disabledTextColor
-                                    font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                                    color: LingmoUI.Theme.secondaryTextColor
+                                    font.pointSize: LingmoUI.Units.fontCaption
                                     Layout.preferredWidth: 52
                                 }
                                 UsageBar {
@@ -150,7 +152,7 @@ Item {
                                 Label {
                                     text: Math.round(modelData * 100) + "%"
                                     color: LingmoUI.Theme.textColor
-                                    font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                                    font.pointSize: LingmoUI.Units.fontCaption
                                     horizontalAlignment: Text.AlignRight
                                     Layout.preferredWidth: 36
                                 }
@@ -167,8 +169,8 @@ Item {
                 }
                 Label {
                     text: qsTr("Os 30 que mais usaram o processador nos últimos segundos (100% = todos os núcleos).")
-                    color: LingmoUI.Theme.disabledTextColor
-                    font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                    color: LingmoUI.Theme.secondaryTextColor
+                    font.pointSize: LingmoUI.Units.fontCaption
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     Layout.bottomMargin: LingmoUI.Units.smallSpacing
@@ -178,12 +180,11 @@ Item {
             footer: Item {
                 width: apps.width
                 height: apps.count > 0 ? LingmoUI.Units.largeSpacing : 80
-                Spinner {
+                LingmoUI.Spinner {
                     anchors.centerIn: parent
                     visible: apps.count === 0
                     running: visible
-                    width: LingmoUI.Units.iconSizes.medium
-                    height: width
+                    size: LingmoUI.Units.iconSizes.medium
                 }
             }
         }

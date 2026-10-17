@@ -59,20 +59,19 @@ ColumnLayout {
         Layout.rightMargin: LingmoUI.Units.largeSpacing
         spacing: LingmoUI.Units.smallSpacing
 
-        Spinner {
+        LingmoUI.Spinner {
             visible: suggestions.busy
             running: visible
-            Layout.preferredWidth: LingmoUI.Units.iconSizes.small
-            Layout.preferredHeight: LingmoUI.Units.iconSizes.small
+            size: LingmoUI.Units.iconSizes.small
         }
         Label {
             text: suggestions.busy ? qsTr("Procurando o que ocupa espaço na sua pasta pessoal e no sistema...")
                                    : qsTr("O que costuma ocupar espaço, do maior para o menor.")
-            color: LingmoUI.Theme.disabledTextColor
+            color: LingmoUI.Theme.secondaryTextColor
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
-        ActionButton {
+        LingmoUI.ActionButton {
             text: qsTr("Atualizar")
             enabled: !suggestions.busy
             onClicked: suggestions.refresh()
@@ -92,7 +91,7 @@ ColumnLayout {
 
         LingmoUI.WheelHandler { target: list }
 
-        delegate: Card {
+        delegate: LingmoUI.Card {
             id: card
 
             required property var modelData
@@ -136,7 +135,7 @@ ColumnLayout {
                         }
                         Label {
                             text: card.item.description
-                            color: LingmoUI.Theme.disabledTextColor
+                            color: LingmoUI.Theme.secondaryTextColor
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                         }
@@ -159,7 +158,7 @@ ColumnLayout {
 
                     Label {
                         text: files.formatBytes(card.item.size)
-                        font.pointSize: LingmoUI.Theme.fontSize * 1.3
+                        font.pointSize: LingmoUI.Units.fontSubheading
                         font.bold: true
                         color: LingmoUI.Theme.textColor
                         Layout.alignment: Qt.AlignTop
@@ -172,7 +171,7 @@ ColumnLayout {
                     spacing: LingmoUI.Units.smallSpacing
                     visible: cleanButton.visible || trashButton.visible || openButton.visible
 
-                    ActionButton {
+                    LingmoUI.ActionButton {
                         id: cleanButton
                         visible: ["pacman-cache", "journal", "flatpak", "user-cache"].indexOf(card.item.action) >= 0
                         primary: true
@@ -180,17 +179,18 @@ ColumnLayout {
                         text: card.item.action === "user-cache" ? qsTr("Limpar caches seguros") : qsTr("Limpar")
                         onClicked: cleaner.run([card.item.action])
                     }
-                    ActionButton {
+                    LingmoUI.ActionButton {
                         id: trashButton
                         visible: card.item.action === "empty-trash"
                         destructive: true
+                        subtle: true
                         text: qsTr("Esvaziar lixeira")
                         onClicked: {
                             emptyTrashDialog.payload = card.item.size
                             emptyTrashDialog.open()
                         }
                     }
-                    ActionButton {
+                    LingmoUI.ActionButton {
                         id: openButton
                         visible: card.item.path.length > 0 && card.item.action !== "none"
                                  || (card.item.action === "none" && card.item.path.length > 0 && card.kids.length === 0)
@@ -222,8 +222,8 @@ ColumnLayout {
                             Label {
                                 visible: entry.detail.length > 0
                                 text: entry.detail
-                                color: LingmoUI.Theme.disabledTextColor
-                                font.pointSize: LingmoUI.Theme.fontSize * 0.85
+                                color: LingmoUI.Theme.secondaryTextColor
+                                font.pointSize: LingmoUI.Units.fontCaption
                                 elide: Text.ElideMiddle
                                 Layout.fillWidth: true
                             }
@@ -234,13 +234,13 @@ ColumnLayout {
                             horizontalAlignment: Text.AlignRight
                             Layout.preferredWidth: 72
                         }
-                        IconButton {
+                        LingmoUI.IconButton {
                             iconName: "document-open-folder"
                             tipText: qsTr("Abrir no gerenciador de arquivos")
                             visible: entry.path.length > 0
                             onClicked: files.openInFileManager(entry.path)
                         }
-                        IconButton {
+                        LingmoUI.IconButton {
                             iconName: "edit-delete"
                             tipText: qsTr("Mover para a lixeira")
                             visible: entry.canTrash
@@ -248,9 +248,10 @@ ColumnLayout {
                                 view.markRemoved(moved)
                             })
                         }
-                        ActionButton {
+                        LingmoUI.ActionButton {
                             visible: entry.ollamaName.length > 0
                             destructive: true
+                            subtle: true
                             text: qsTr("Remover")
                             onClicked: {
                                 ollamaDialog.title = qsTr("Remover o modelo %1?").arg(entry.ollamaName)
@@ -281,11 +282,12 @@ ColumnLayout {
             }
         }
 
-        Label {
+        LingmoUI.EmptyState {
             anchors.centerIn: parent
+            width: Math.min(implicitWidth, list.width - LingmoUI.Units.largeSpacing * 2)
             visible: list.count === 0 && suggestions.loaded && !suggestions.busy
-            text: qsTr("Nada que valha a pena limpar foi encontrado.")
-            color: LingmoUI.Theme.disabledTextColor
+            iconName: "checkmark"
+            title: qsTr("Nada que valha a pena limpar foi encontrado.")
         }
     }
 

@@ -14,7 +14,7 @@ LingmoUI.Window {
 
     // Same window look as Lingmo Settings
     background.opacity: LingmoUI.Theme.darkMode ? 0.88 : 0.97
-    header.height: 40
+    header.height: LingmoUI.Units.windowHeaderHeight
     contentTopMargin: 0
 
     LingmoUI.WindowBlur {

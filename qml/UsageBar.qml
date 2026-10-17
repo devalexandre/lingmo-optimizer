@@ -20,7 +20,7 @@ Rectangle {
         radius: parent.radius
         color: bar.fillColor
 
-        Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on width { NumberAnimation { duration: LingmoUI.Units.longDuration; easing.type: LingmoUI.Units.easing } }
+        Behavior on color { ColorAnimation { duration: LingmoUI.Units.shortDuration } }
     }
 }
