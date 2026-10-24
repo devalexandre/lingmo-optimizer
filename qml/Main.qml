@@ -31,6 +31,13 @@ LingmoUI.Window {
             stack.push(memoryPage)
         else if (name === "storage")
             stack.push(storagePage)
+        else if (name === "developer")
+            stack.push(storagePage, { currentTab: 3 })
+    }
+
+    Component.onCompleted: {
+        if (startPage.length > 0)
+            openPage(startPage)
     }
 
     StackView {
@@ -42,6 +49,7 @@ LingmoUI.Window {
 
         initialItem: OverviewPage {
             onOpenPage: function(name) { rootWindow.openPage(name) }
+            onCleanRequested: cleanupDialog.openDialog()
         }
     }
 
@@ -55,7 +63,10 @@ LingmoUI.Window {
     }
     Component {
         id: storagePage
-        StoragePage { onBack: stack.pop() }
+        StoragePage {
+            onBack: stack.pop()
+            onCleanRequested: function(ids) { cleanupDialog.confirmIds(ids) }
+        }
     }
 
     // Back with Esc / Alt+Left
@@ -67,6 +78,37 @@ LingmoUI.Window {
 
     MessageDialog {
         id: errorDialog
+    }
+
+    // One cleanup dialog for the whole app: choose, confirm, progress, summary
+    CleanupDialog {
+        id: cleanupDialog
+        objectName: "cleanupDialog"
+        parent: Overlay.overlay
+        islandAvailable: island.activityId > 0
+    }
+
+    // Cleaning progress in the status bar's Island (com.lingmo.Island);
+    // without a status bar nothing happens and the dialog shows it
+    LingmoUI.IslandActivity {
+        id: island
+        appId: "lingmo-optimizer"
+        active: cleaner.running
+        kind: "generic"
+        title: qsTr("Limpando")
+        subtitle: cleaner.currentStep
+        iconName: "edit-clear-all"
+        progress: cleaner.progress
+        hints: ({ detail: qsTr("%1 liberados").arg(files.formatBytes(cleaner.freed)) })
+        finishMessage: qsTr("%1 liberados").arg(files.formatBytes(cleaner.freed))
+        actions: [ { id: "open", label: qsTr("Abrir") } ]
+        onActionInvoked: function(actionId) {
+            if (actionId === "open") {
+                rootWindow.raise()
+                rootWindow.requestActivate()
+                cleanupDialog.open()
+            }
+        }
     }
 
     Connections {

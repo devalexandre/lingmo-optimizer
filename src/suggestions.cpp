@@ -179,8 +179,8 @@ QVariantList collect(std::shared_ptr<ScanProgress> progress)
         }
         items.append(item(QStringLiteral("user-cache"), tr_("Cache de programas (~/.cache)"),
                           tr_("Arquivos temporários que os programas guardam para abrir mais rápido. \"Limpar\" apaga só os "
-                              "caches seguros (%1: miniaturas, pip, npm, yarn, Go, shaders). Os de navegadores e "
-                              "modelos de IA ficam; apague-os pela lista abaixo se quiser.")
+                              "caches seguros (%1: miniaturas, shaders e fontes). Os de ferramentas de desenvolvimento (pip, npm, Go, "
+                              "cargo...) estão na aba Desenvolvimento; os de navegadores ficam.")
                               .arg(Format::bytes(safe)),
                           size, cacheDir, QStringLiteral("folder-temp"), QStringLiteral("user-cache"), children));
     }

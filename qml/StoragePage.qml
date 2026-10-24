@@ -7,6 +7,7 @@ Item {
     id: page
 
     signal back()
+    signal cleanRequested(var ids)
 
     property alias currentTab: tabs.currentIndex
 
@@ -38,7 +39,7 @@ Item {
             LingmoUI.SegmentedControl {
                 id: tabs
                 objectName: "storageTabs"
-                model: [qsTr("Discos"), qsTr("Onde está o espaço"), qsTr("Sugestões")]
+                model: [qsTr("Discos"), qsTr("Onde está o espaço"), qsTr("Sugestões"), qsTr("Desenvolvimento")]
             }
         }
 
@@ -133,6 +134,11 @@ Item {
             SuggestionsView {
                 active: tabs.currentIndex === 2
                 onTrashRequested: function(paths, size, done) { page.confirmTrash(paths, size, done) }
+            }
+
+            DevToolsView {
+                active: tabs.currentIndex === 3
+                onCleanRequested: function(ids) { page.cleanRequested(ids) }
             }
         }
     }

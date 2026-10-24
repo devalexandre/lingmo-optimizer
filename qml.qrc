@@ -13,5 +13,7 @@
         <file>qml/UsageBar.qml</file>
         <file>qml/ConfirmDialog.qml</file>
         <file>qml/MessageDialog.qml</file>
+        <file>qml/DevToolsView.qml</file>
+        <file>qml/DevItemRow.qml</file>
     </qresource>
 </RCC>

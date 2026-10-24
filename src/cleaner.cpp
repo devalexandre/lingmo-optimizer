@@ -1,12 +1,15 @@
 #include "cleaner.h"
 
+#include "core/devcaches.h"
 #include "core/diskusage.h"
+#include "devtools.h"
 #include "core/format.h"
 
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QFutureWatcher>
+#include <QPointer>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QtConcurrent>
@@ -15,7 +18,8 @@
 #define HELPER_PATH "/usr/lib/lingmo-optimizer/clean-system"
 #endif
 
-static const QStringList kRootSteps = {QStringLiteral("pacman-cache"), QStringLiteral("journal"), QStringLiteral("flatpak")};
+static const QStringList kRootSteps = {QStringLiteral("pacman-cache"), QStringLiteral("pacman-old"), QStringLiteral("pacman-uninstalled"),
+                                        QStringLiteral("journal"), QStringLiteral("flatpak")};
 
 static QString helperPath()
 {
@@ -32,10 +36,10 @@ Cleaner::Cleaner(QObject *parent)
                             {QStringLiteral("description"), description}, {QStringLiteral("root"), root},
                             {QStringLiteral("size"), -1.0}, {QStringLiteral("upTo"), false}};
     };
+    // The pacman cache and the caches of developer tools are items of
+    // "Ferramentas de desenvolvimento" (DevTools), listed below these steps
     m_steps.append(step(QStringLiteral("user-cache"), tr("Caches de programas"),
-                        tr("Miniaturas, pip, npm, yarn, Go, shaders de vídeo e fontes. São recriados quando preciso."), false));
-    m_steps.append(step(QStringLiteral("pacman-cache"), tr("Pacotes baixados"),
-                        tr("Versões antigas e pacotes desinstalados no cache do pacman (mantém a versão atual)."), true));
+                        tr("Miniaturas, shaders de vídeo e fontes. São recriados quando preciso."), false));
     m_steps.append(step(QStringLiteral("journal"), tr("Registros do sistema"),
                         tr("Mensagens do journal com mais de 7 dias."), true));
     if (hasFlatpak)
@@ -54,15 +58,15 @@ QStringList Cleaner::safeCacheDirs()
     const QString cache = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
     const QString home = QDir::homePath();
     QStringList dirs;
-    for (const char *name : {"thumbnails", "pip", "yarn", "go-build", "mesa_shader_cache", "mesa_shader_cache_db",
-                             "nvidia/GLCache", "fontconfig", "yay", "paru", "pnpm", "typescript", "node-gyp",
-                             "qtshadercache"})
+    // pip, npm, yarn, Go, yay/paru... are "Ferramentas de desenvolvimento"
+    for (const char *name : {"thumbnails", "mesa_shader_cache", "mesa_shader_cache_db", "nvidia/GLCache", "fontconfig",
+                             "typescript", "qtshadercache"})
         dirs.append(cache + QLatin1Char('/') + QLatin1String(name));
     // Qt names it qtshadercache-<arch>-<endianness>-<abi>
     const QStringList qtCaches = QDir(cache).entryList({QStringLiteral("qtshadercache-*")}, QDir::Dirs | QDir::NoSymLinks);
     for (const QString &dir : qtCaches)
         dirs.append(cache + QLatin1Char('/') + dir);
-    dirs.append(home + QStringLiteral("/.npm/_cacache"));
+    Q_UNUSED(home);
 
     QStringList existing;
     for (const QString &dir : std::as_const(dirs)) {
@@ -126,37 +130,6 @@ void Cleaner::estimate()
             cache += DiskScanner::totalSize(dir);
         sizes.insert(QStringLiteral("user-cache"), double(cache));
 
-        // paccache can tell exactly what it would remove (dry run, no root)
-        const QString paccache = QStandardPaths::findExecutable(QStringLiteral("paccache"));
-        qint64 pacman = -1;
-        if (!paccache.isEmpty()) {
-            pacman = 0;
-            for (const QStringList &args : {QStringList {QStringLiteral("-dk1"), QStringLiteral("--nocolor")},
-                                            QStringList {QStringLiteral("-duk0"), QStringLiteral("--nocolor")}}) {
-                QProcess p;
-                p.start(paccache, args);
-                if (!p.waitForFinished(20000))
-                    continue;
-                const QString out = QString::fromUtf8(p.readAllStandardOutput() + p.readAllStandardError());
-                const QRegularExpression re(QStringLiteral("disk space saved: ([0-9.]+) ([KMGT]?i?B)"));
-                const auto m = re.match(out);
-                if (m.hasMatch()) {
-                    const double value = m.captured(1).toDouble();
-                    const QString unit = m.captured(2);
-                    double mult = 1;
-                    if (unit.startsWith(QLatin1Char('K'))) mult = 1024.0;
-                    else if (unit.startsWith(QLatin1Char('M'))) mult = 1024.0 * 1024;
-                    else if (unit.startsWith(QLatin1Char('G'))) mult = 1024.0 * 1024 * 1024;
-                    else if (unit.startsWith(QLatin1Char('T'))) mult = 1024.0 * 1024 * 1024 * 1024;
-                    pacman += qint64(value * mult);
-                }
-            }
-        }
-        if (pacman < 0) {
-            sizes.insert(QStringLiteral("pacman-cache-upTo"), true);
-            pacman = DiskScanner::totalSize(QStringLiteral("/var/cache/pacman/pkg"));
-        }
-        sizes.insert(QStringLiteral("pacman-cache"), double(pacman));
         // Upper bounds: how much of it is older than 7 days is not known
         sizes.insert(QStringLiteral("journal"), double(journalSize()));
         sizes.insert(QStringLiteral("journal-upTo"), true);
@@ -173,6 +146,14 @@ QString Cleaner::titleFor(const QString &id) const
     }
     if (id == QLatin1String("flatpak-user"))
         return tr("Runtimes Flatpak sem uso (usuário)");
+    if (id == QLatin1String("pacman-cache"))
+        return tr("Pacotes baixados");
+    if (m_devTools) {
+        DevCaches::Item item;
+        const QString devId = id.startsWith(QLatin1String("dev:")) ? id.mid(4) : id;
+        if (m_devTools->find(devId, &item))
+            return item.title;
+    }
     return id;
 }
 
@@ -189,6 +170,7 @@ void Cleaner::addResult(const QString &id, qint64 freed, bool ok, const QString 
                                   {QStringLiteral("message"), message}});
     if (ok)
         m_totalFreed += freed;
+    emit currentStepChanged();
 }
 
 void Cleaner::run(const QStringList &stepIds)
@@ -199,21 +181,53 @@ void Cleaner::run(const QStringList &stepIds)
     m_results.clear();
     m_totalFreed = 0;
     m_rootSteps.clear();
+    m_cleanedDevIds.clear();
+    QStringList userSteps;
+    QList<DevCaches::Item> devItems;
     for (const QString &id : stepIds) {
-        if (kRootSteps.contains(id))
-            m_rootSteps.append(id);
+        if (kRootSteps.contains(id)) {
+            if (!m_rootSteps.contains(id))
+                m_rootSteps.append(id);
+        } else if (id.startsWith(QLatin1String("dev:"))) {
+            DevCaches::Item item;
+            if (!m_devTools || !m_devTools->find(id.mid(4), &item))
+                continue;
+            m_cleanedDevIds.append(item.id);
+            if (item.action == DevCaches::Action::Root) {
+                // pacman: a fixed step of the privileged helper
+                if (kRootSteps.contains(item.rootStep) && !m_rootSteps.contains(item.rootStep))
+                    m_rootSteps.append(item.rootStep);
+            } else if (item.cleanable()) {
+                devItems.append(item);
+            }
+        } else {
+            userSteps.append(id);
+        }
     }
+    // Docker/Podman images before containers: images of stopped containers stay
+    std::stable_sort(devItems.begin(), devItems.end(),
+                     [](const DevCaches::Item &a, const DevCaches::Item &b) { return a.order < b.order; });
+    m_doneSteps = 0;
+    m_totalSteps = int(userSteps.size() + devItems.size() + m_rootSteps.size());
     emit runningChanged();
-    runUserSteps(stepIds);
+    runUserSteps(userSteps, devItems);
 }
 
-void Cleaner::runUserSteps(const QStringList &ids)
+void Cleaner::stepDone(const QString &nextId)
+{
+    ++m_doneSteps;
+    setCurrentStep(nextId);
+}
+
+void Cleaner::runUserSteps(const QStringList &ids, const QList<DevCaches::Item> &devItems)
 {
     const bool cache = ids.contains(QStringLiteral("user-cache"));
     const bool flatpakUser = ids.contains(QStringLiteral("flatpak"))
         && QFileInfo::exists(QDir::homePath() + QStringLiteral("/.local/share/flatpak"));
     if (cache)
         setCurrentStep(QStringLiteral("user-cache"));
+    else if (!devItems.isEmpty())
+        setCurrentStep(QStringLiteral("dev:") + devItems.first().id);
 
     auto *watcher = new QFutureWatcher<QVariantList>(this);
     connect(watcher, &QFutureWatcher<QVariantList>::finished, this, [this, watcher] {
@@ -226,8 +240,23 @@ void Cleaner::runUserSteps(const QStringList &ids)
         }
         runRootSteps();
     });
-    watcher->setFuture(QtConcurrent::run([cache, flatpakUser] {
+    QPointer<Cleaner> self(this);
+    watcher->setFuture(QtConcurrent::run([self, cache, flatpakUser, devItems] {
         QVariantList results;
+        auto next = [&self](const QString &id) {
+            QMetaObject::invokeMethod(self.data(), [self, id] {
+                if (self)
+                    self->stepDone(id);
+            }, Qt::QueuedConnection);
+        };
+        // Each result reaches the UI (and the Island) as soon as it is known
+        auto post = [&self](const QVariantMap &r) {
+            QMetaObject::invokeMethod(self.data(), [self, r] {
+                if (self)
+                    self->addResult(r.value(QStringLiteral("id")).toString(), qint64(r.value(QStringLiteral("freed")).toDouble()),
+                                    r.value(QStringLiteral("ok")).toBool(), r.value(QStringLiteral("message")).toString());
+            }, Qt::QueuedConnection);
+        };
         if (cache) {
             qint64 freed = 0;
             int failures = 0;
@@ -236,11 +265,23 @@ void Cleaner::runUserSteps(const QStringList &ids)
                 freed += removeDirectoryContents(dir, &f);
                 failures += f;
             }
-            results.append(QVariantMap {{QStringLiteral("id"), QStringLiteral("user-cache")},
+            post(QVariantMap {{QStringLiteral("id"), QStringLiteral("user-cache")},
                                         {QStringLiteral("freed"), double(freed)}, {QStringLiteral("ok"), true},
                                         {QStringLiteral("message"), failures > 0
                                              ? QCoreApplication::translate("Cleaner", "%1 itens em uso não puderam ser apagados").arg(failures)
                                              : QString()}});
+            next(devItems.isEmpty() ? QString() : QStringLiteral("dev:") + devItems.first().id);
+        }
+        // Developer tools, one by one: each re-checks its paths and whether
+        // something uses it right now
+        const DevCaches::Env env = DevCaches::Env::system();
+        for (int i = 0; i < devItems.size(); ++i) {
+            const DevCaches::Item &item = devItems.at(i);
+            const DevCaches::Result r = DevCaches::clean(item, env);
+            post(QVariantMap {{QStringLiteral("id"), QStringLiteral("dev:") + item.id},
+                                        {QStringLiteral("freed"), double(r.freed)}, {QStringLiteral("ok"), r.ok},
+                                        {QStringLiteral("message"), r.message}});
+            next(i + 1 < devItems.size() ? QStringLiteral("dev:") + devItems.at(i + 1).id : QString());
         }
         if (flatpakUser) {
             const QString dir = QDir::homePath() + QStringLiteral("/.local/share/flatpak");
@@ -250,7 +291,7 @@ void Cleaner::runUserSteps(const QStringList &ids)
                                                 QStringLiteral("-y"), QStringLiteral("--noninteractive")});
             const bool ok = p.waitForFinished(10 * 60 * 1000) && p.exitCode() == 0;
             const qint64 after = DiskScanner::totalSize(dir);
-            results.append(QVariantMap {{QStringLiteral("id"), QStringLiteral("flatpak-user")},
+            post(QVariantMap {{QStringLiteral("id"), QStringLiteral("flatpak-user")},
                                         {QStringLiteral("freed"), double(qMax<qint64>(0, before - after))},
                                         {QStringLiteral("ok"), ok}, {QStringLiteral("message"), QString()}});
         }
@@ -281,9 +322,14 @@ void Cleaner::runRootSteps()
                 if (parts.size() >= 2) {
                     const QString id = QString::fromUtf8(parts.at(0));
                     const bool ok = parts.value(2, "0") == "0";
+                    const int status = parts.value(2, "0").toInt();
                     addResult(id, parts.at(1).toLongLong(), ok,
-                              ok ? QString() : tr("O comando terminou com erro"));
+                              ok ? QString()
+                                 : status == 75 ? tr("O pacman está instalando ou atualizando algo agora: tente depois")
+                                                : tr("O comando terminou com erro"));
                     m_rootSteps.removeAll(id);
+                    ++m_doneSteps;
+                    emit currentStepChanged();
                 }
             }
         }
@@ -317,7 +363,11 @@ void Cleaner::runRootSteps()
 void Cleaner::finish()
 {
     setCurrentStep(QString());
+    m_doneSteps = m_totalSteps;
     m_running = false;
+    // Measure again only what was cleaned (the rest stays cached)
+    if (m_devTools && !m_cleanedDevIds.isEmpty())
+        m_devTools->refresh(m_cleanedDevIds);
     emit runningChanged();
     emit finished(m_results, double(m_totalFreed));
 }

@@ -8,8 +8,8 @@
   <action id="com.lingmo.optimizer.clean-system">
     <description>Clean system caches and logs</description>
     <description xml:lang="pt_BR">Limpar caches e registros do sistema</description>
-    <message>Authentication is required to clean the package cache, the system journal and unused Flatpak runtimes</message>
-    <message xml:lang="pt_BR">É necessária autenticação para limpar o cache de pacotes, os registros do sistema e os runtimes Flatpak sem uso</message>
+    <message>Authentication is required to clean the pacman package cache (old versions and uninstalled packages), the system journal and unused Flatpak runtimes</message>
+    <message xml:lang="pt_BR">É necessária autenticação para limpar o cache de pacotes do pacman (versões antigas e pacotes desinstalados), os registros do sistema e os runtimes Flatpak sem uso</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

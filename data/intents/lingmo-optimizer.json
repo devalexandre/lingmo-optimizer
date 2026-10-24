@@ -1,0 +1,185 @@
+{
+  "format": "lingmo-intents",
+  "version": 1,
+  "app": "lingmo-optimizer",
+  "name": {
+    "en": "Optimizer",
+    "pt_BR": "Otimizador"
+  },
+  "icon": "lingmo-optimizer",
+  "desktop": "lingmo-optimizer.desktop",
+  "dbus": {
+    "service": "com.lingmo.Optimizer",
+    "path": "/Intents"
+  },
+  "intents": [
+    {
+      "id": "optimizer.analyze",
+      "title": {
+        "en": "Analyze developer caches",
+        "pt_BR": "Analisar caches de desenvolvimento"
+      },
+      "description": {
+        "en": "Measures how much space caches of developer tools use (pacman, AUR, Docker, Podman, Go, Node, Python, Rust, Java, JetBrains, AI models) and how much can be freed safely.",
+        "pt_BR": "Mede quanto espaço os caches de ferramentas de desenvolvimento ocupam (pacman, AUR, Docker, Podman, Go, Node, Python, Rust, Java, JetBrains, modelos de IA) e quanto pode ser liberado com segurança."
+      },
+      "summary": {
+        "en": "Analyze developer caches",
+        "pt_BR": "Analisar caches de desenvolvimento"
+      },
+      "icon": "edit-clear-all",
+      "capabilities": [
+        "read"
+      ],
+      "needsUI": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "projects": {
+            "type": "boolean",
+            "default": false,
+            "title": {
+              "en": "Also look in project folders",
+              "pt_BR": "Procurar também nas pastas de projetos"
+            },
+            "description": {
+              "en": "Old node_modules, virtual environments and CMake builds (slower).",
+              "pt_BR": "node_modules, ambientes virtuais e builds do CMake antigos (mais lento)."
+            }
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "string",
+            "title": {
+              "en": "Space used",
+              "pt_BR": "Espaço ocupado"
+            }
+          },
+          "reclaimable": {
+            "type": "string",
+            "title": {
+              "en": "Can be freed safely",
+              "pt_BR": "Pode ser liberado com segurança"
+            }
+          },
+          "totalBytes": {
+            "type": "number",
+            "title": {
+              "en": "Space used (bytes)",
+              "pt_BR": "Espaço ocupado (bytes)"
+            }
+          },
+          "reclaimableBytes": {
+            "type": "number",
+            "title": {
+              "en": "Can be freed (bytes)",
+              "pt_BR": "Pode ser liberado (bytes)"
+            }
+          },
+          "summary": {
+            "type": "string",
+            "title": {
+              "en": "By tool",
+              "pt_BR": "Por ferramenta"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "analisar caches de desenvolvimento",
+          "quanto espaço os caches de programação ocupam",
+          "onde está o espaço das ferramentas de desenvolvimento"
+        ],
+        "en": [
+          "analyze developer caches",
+          "how much space do developer caches use"
+        ]
+      }
+    },
+    {
+      "id": "optimizer.clean.caches",
+      "title": {
+        "en": "Clean developer caches",
+        "pt_BR": "Limpar caches de desenvolvimento"
+      },
+      "description": {
+        "en": "Cleans the caches of developer tools that come back by themselves (package downloads, build caches, unused images). Never touches documents, projects, environments, toolchain versions, volumes or anything running.",
+        "pt_BR": "Limpa os caches de ferramentas de desenvolvimento que voltam sozinhos (pacotes baixados, caches de compilação, imagens sem uso). Nunca mexe em documentos, projetos, ambientes, versões instaladas, volumes nem no que está rodando."
+      },
+      "summary": {
+        "en": "Clean developer caches",
+        "pt_BR": "Limpar caches de desenvolvimento"
+      },
+      "icon": "edit-clear-all",
+      "capabilities": [
+        "write"
+      ],
+      "needsUI": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["packages", "docker", "podman", "go", "node", "python", "rust", "java", "jetbrains", "ai"]
+            },
+            "title": {
+              "en": "Only these tools (empty: all)",
+              "pt_BR": "Só estas ferramentas (vazio: todas)"
+            }
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "freed": {
+            "type": "string",
+            "title": {
+              "en": "Space freed",
+              "pt_BR": "Espaço liberado"
+            }
+          },
+          "freedBytes": {
+            "type": "number",
+            "title": {
+              "en": "Space freed (bytes)",
+              "pt_BR": "Espaço liberado (bytes)"
+            }
+          },
+          "cleaned": {
+            "type": "integer",
+            "title": {
+              "en": "Caches cleaned",
+              "pt_BR": "Caches limpos"
+            }
+          },
+          "summary": {
+            "type": "string",
+            "title": {
+              "en": "Details",
+              "pt_BR": "Detalhes"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "limpar caches de desenvolvimento",
+          "liberar espaço dos caches de programação",
+          "limpar cache do go e do npm"
+        ],
+        "en": [
+          "clean developer caches",
+          "free space used by build caches"
+        ]
+      }
+    }
+  ]
+}

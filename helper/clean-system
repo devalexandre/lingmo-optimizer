@@ -6,11 +6,15 @@
 # free-form arguments: each step is one fixed, well-known cleanup.
 #
 #   pacman-cache   paccache -rk1 + paccache -ruk0 (pacman-contrib), or pacman -Sc
+#   pacman-old     paccache -rk1: old versions, keeps the installed one
+#   pacman-uninstalled
+#                  paccache -ruk0: packages no longer installed
 #   journal        journalctl --vacuum-time=7d
 #   flatpak        flatpak uninstall --system --unused
 #
 # For each step it prints "@@STEP <step>" before and "@@FREED <step> <bytes>"
 # after, then "@@DONE". Unknown steps print "@@ERROR usage" and exit 2.
+# The pacman steps do nothing while pacman runs (db.lck): status 75.
 #
 # Testing without root: when not running as root and LINGMO_OPTIMIZER_FAKE is
 # set, nothing is run and every step reports a fake amount. As root that
@@ -33,7 +37,7 @@ fi
 [ $# -gt 0 ] || { echo "@@ERROR usage"; exit 2; }
 for step in "$@"; do
     case "$step" in
-        pacman-cache|journal|flatpak) ;;
+        pacman-cache|pacman-old|pacman-uninstalled|journal|flatpak) ;;
         *) echo "@@ERROR usage"; exit 2 ;;
     esac
 done
@@ -44,7 +48,19 @@ usage() {
     du -sx -B1 "$1" 2>/dev/null | cut -f1
 }
 
+pacman_busy() {
+    [ -e /var/lib/pacman/db.lck ]
+}
+
 run_step() {
+    case "$1" in
+        pacman-*)
+            if pacman_busy; then
+                echo "@@FREED $1 0 75"
+                return
+            fi
+            ;;
+    esac
     case "$1" in
         pacman-cache)
             dir=/var/cache/pacman/pkg
@@ -55,6 +71,16 @@ run_step() {
             else
                 pacman -Sc --noconfirm
             fi
+            ;;
+        pacman-old)
+            dir=/var/cache/pacman/pkg
+            before=$(usage "$dir")
+            paccache -rk1 --nocolor
+            ;;
+        pacman-uninstalled)
+            dir=/var/cache/pacman/pkg
+            before=$(usage "$dir")
+            paccache -ruk0 --nocolor
             ;;
         journal)
             dir=/var/log/journal
@@ -82,6 +108,8 @@ for step in "$@"; do
         sleep 0.3
         case "$step" in
             pacman-cache) echo "@@FREED $step 1288490188 0" ;;
+            pacman-old) echo "@@FREED $step 1073741824 0" ;;
+            pacman-uninstalled) echo "@@FREED $step 214748364 0" ;;
             journal) echo "@@FREED $step 402653184 0" ;;
             flatpak) echo "@@FREED $step 0 0" ;;
         esac

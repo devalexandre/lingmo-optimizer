@@ -26,6 +26,8 @@ add_library(optimizer-core STATIC
     src/core/format.h
     src/core/hogs.cpp
     src/core/hogs.h
+    src/core/devcaches.cpp
+    src/core/devcaches.h
 )
 target_include_directories(optimizer-core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(optimizer-core PUBLIC Qt6::Core)
@@ -44,6 +46,8 @@ add_executable(lingmo-optimizer
     src/suggestions.h
     src/cleaner.cpp
     src/cleaner.h
+    src/devtools.cpp
+    src/devtools.h
     src/fileactions.cpp
     src/fileactions.h
     qml.qrc
@@ -55,6 +59,19 @@ target_link_libraries(lingmo-optimizer
   optimizer-core
   Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Concurrent Qt6::DBus
 )
+
+# Lingmo Intents: optimizer.analyze, optimizer.clean.caches on com.lingmo.Optimizer
+# /Intents (`lingmo-optimizer --intents`). Optional: without the library the
+# app builds the same, only without the actions.
+find_package(LingmoIntents 1.0 QUIET)
+if(LingmoIntents_FOUND)
+    target_sources(lingmo-optimizer PRIVATE src/optimizerintents.cpp src/optimizerintents.h)
+    target_compile_definitions(lingmo-optimizer PRIVATE HAVE_LINGMO_INTENTS)
+    target_link_libraries(lingmo-optimizer PRIVATE LingmoIntents::LingmoIntents)
+    lingmo_install_intents(MANIFEST data/intents/lingmo-optimizer.json SERVICE data/com.lingmo.Optimizer.service)
+else()
+    message(STATUS "LingmoIntents not found: Optimizer is built without app actions (intents)")
+endif()
 
 install(TARGETS lingmo-optimizer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(PROGRAMS helper/clean-system DESTINATION ${HELPER_DIR})
@@ -68,4 +85,7 @@ if(BUILD_TESTING)
     add_executable(tst_optimizer tests/tst_optimizer.cpp)
     target_link_libraries(tst_optimizer PRIVATE optimizer-core Qt6::Test)
     add_test(NAME tst_optimizer COMMAND tst_optimizer)
+    add_executable(tst_devcaches tests/tst_devcaches.cpp)
+    target_link_libraries(tst_devcaches PRIVATE optimizer-core Qt6::Test)
+    add_test(NAME tst_devcaches COMMAND tst_devcaches)
 endif()

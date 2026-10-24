@@ -1,6 +1,7 @@
 #include "diskusage.h"
 
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QFile>
 
 #include <algorithm>
@@ -71,7 +72,18 @@ struct DiskScanner::Context {
     ScanProgress *progress = nullptr;
     std::set<std::pair<dev_t, ino_t>> seenInodes;   // hard links counted once
     std::function<void(std::unique_ptr<DuNode>)> takeTopLevel;
-    bool cancelled() const { return progress && progress->cancel.load(std::memory_order_relaxed); }
+    mutable unsigned checks = 0;
+    bool cancelled() const
+    {
+        if (!progress)
+            return false;
+        if (progress->cancel.load(std::memory_order_relaxed))
+            return true;
+        const qint64 deadline = progress->deadline.load(std::memory_order_relaxed);
+        if (deadline > 0 && (++checks & 255) == 0 && QDateTime::currentMSecsSinceEpoch() >= deadline)
+            progress->cancel.store(true, std::memory_order_relaxed);
+        return progress->cancel.load(std::memory_order_relaxed);
+    }
 };
 
 DiskScanner::DiskScanner() = default;
@@ -233,12 +245,12 @@ void DiskScanner::scanDir(int dirFd, DuNode *node, const QByteArray &path, Conte
     node->sortChildren();
 }
 
-qint64 DiskScanner::totalSize(const QString &path, bool *denied)
+qint64 DiskScanner::totalSize(const QString &path, bool *denied, ScanProgress *progress)
 {
     Options options;
     options.keepChildren = false;
     DiskScanner scanner(options);
-    const auto root = scanner.scan(path);
+    const auto root = scanner.scan(path, progress);
     if (denied)
         *denied = root->denied || root->incomplete;
     return root->size;

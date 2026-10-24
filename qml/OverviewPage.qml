@@ -7,6 +7,7 @@ Item {
     id: page
 
     signal openPage(string name)
+    signal cleanRequested()
 
     ColumnLayout {
         anchors.fill: parent
@@ -74,11 +75,7 @@ Item {
             enabled: !cleaner.running
             busy: cleaner.running
             font.bold: true
-            onClicked: cleanupDialog.openDialog()
+            onClicked: page.cleanRequested()
         }
-    }
-
-    CleanupDialog {
-        id: cleanupDialog
     }
 }

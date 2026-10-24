@@ -44,6 +44,9 @@ struct ScanProgress {
     std::atomic<qint64> bytes {0};
     std::atomic<qint64> entries {0};
     std::atomic<bool> cancel {false};
+    // Stop at this time (ms since the epoch, CLOCK_REALTIME); 0 = no limit.
+    // A scan that hits it is marked incomplete, like a cancelled one.
+    std::atomic<qint64> deadline {0};
     QMutex mutex;
     QByteArray current;        // folder being read (guarded by mutex)
     QString currentPath()
@@ -76,8 +79,9 @@ public:
     std::unique_ptr<DuNode> scan(const QString &path, ScanProgress *progress = nullptr,
                                  const std::function<void(std::unique_ptr<DuNode>)> &takeTopLevel = {});
 
-    // Convenience: total disk usage of `path` (0 if missing)
-    static qint64 totalSize(const QString &path, bool *denied = nullptr);
+    // Convenience: total disk usage of `path` (0 if missing). With a
+    // progress, its cancel flag and deadline apply (then *denied is set).
+    static qint64 totalSize(const QString &path, bool *denied = nullptr, ScanProgress *progress = nullptr);
 
 private:
     struct Context;
